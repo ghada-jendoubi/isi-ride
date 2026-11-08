@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block titre %}Demandes reçues, ISI Ride{% endblock %}
+
+{% block contenu %}
+<h2 class="mb-3">Demandes reçues sur mes trajets</h2>
+
+{% if demandes|length == 0 %}
+    <div class="alert alert-info">Vous n'avez reçu aucune demande pour le moment.</div>
+{% else %}
+    <div class="row">
+        {% for d in demandes %}
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ d['date_heure'][11:16] }} : {{ d['ville'] }}
+                        {% if d['sens'] == 'aller' %}→ ISI{% else %}← depuis l'ISI{% endif %}
+                    </h5>
+                    <p class="mb-1">📅 {{ d['date_heure'][:10] }}</p>
+                    <p class="mb-1">💺 {{ d['places_restantes'] }} place(s) restante(s)</p>
+                    <p class="mb-2">🧑 Passager : {{ d['prenom'] }} {{ d['nom'] }}</p>
+
+                    <p class="mb-2">
+                        {% if d['statut'] == 'en_attente' %}
+                            <span class="badge bg-warning text-dark">En attente</span>
+                        {% elif d['statut'] == 'acceptee' %}
+                            <span class="badge bg-success">Acceptée</span>
+                        {% elif d['statut'] == 'refusee' %}
+                            <span class="badge bg-danger">Refusée</span>
+                        {% elif d['statut'] == 'annulee' %}
+                            <span class="badge bg-secondary">Annulée par le passager</span>
+                        {% else %}
+                            <span class="badge bg-dark">Trajet annulé</span>
+                        {% endif %}
+                    </p>
+
+                    {% if d['statut'] == 'acceptee' %}
+                        <div class="alert alert-success py-2">
+                            <strong>Contact du passager</strong><br>
+                            E-mail : {{ d['email'] }}<br>
+                            {% if d['telephone'] %}Téléphone : {{ d['telephone'] }}{% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if d['statut'] == 'en_attente' %}
+                        <div class="d-flex gap-2">
+                            <form method="POST" action="{{ url_for('accepter', reservation_id=d['id']) }}">
+                                <button type="submit" class="btn btn-success btn-sm">Accepter</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('refuser', reservation_id=d['id']) }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Refuser</button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

@@ -364,6 +364,85 @@ def annuler_reservation(reservation_id):
     db.close()
     return redirect(url_for("mes_reservations"))
 
+@app.route("/demandes-recues")
+@connexion_requise
+def demandes_recues():
+    """Demandes de réservation reçues sur les trajets du conducteur (BF7, BF11)."""
+    db = get_db()
+    demandes = db.execute(
+        """SELECT r.id, r.statut, t.date_heure, t.ville, t.sens,
+                  t.places_restantes, u.prenom, u.nom, u.email, u.telephone
+           FROM reservations r
+           JOIN trajets t ON t.id = r.trajet_id
+           JOIN utilisateurs u ON u.id = r.passager_id
+           WHERE t.conducteur_id = ?
+           ORDER BY t.date_heure DESC, r.id DESC""",
+        (session["user_id"],),
+    ).fetchall()
+    db.close()
+    return render_template("demandes_recues.html", demandes=demandes)
 
+
+@app.route("/accepter/<int:reservation_id>", methods=["POST"])
+@connexion_requise
+def accepter(reservation_id):
+    """Acceptation d'une demande par le conducteur (BF8, RG4, RG5)."""
+    maintenant = datetime.now().strftime("%Y-%m-%d %H:%M")
+    db = get_db()
+    # La réservation doit concerner un trajet appartenant au conducteur connecté
+    reservation = db.execute(
+        """SELECT r.id, r.statut, t.id AS trajet_id, t.statut AS statut_trajet,
+                  t.date_heure, t.places_restantes
+           FROM reservations r
+           JOIN trajets t ON t.id = r.trajet_id
+           WHERE r.id = ? AND t.conducteur_id = ?""",
+        (reservation_id, session["user_id"]),
+    ).fetchone()
+
+    if reservation is None:
+        flash("Demande introuvable.", "danger")
+    elif reservation["statut"] != "en_attente":
+        flash("Cette demande a déjà été traitée.", "warning")
+    elif reservation["statut_trajet"] != "actif" or reservation["date_heure"] <= maintenant:
+        flash("Ce trajet n'est plus disponible.", "danger")
+    elif reservation["places_restantes"] < 1:
+        flash("Il ne reste plus de place sur ce trajet.", "danger")  # RG5
+    else:
+        db.execute("UPDATE reservations SET statut = 'acceptee' WHERE id = ?", (reservation_id,))
+        db.execute(
+            "UPDATE trajets SET places_restantes = places_restantes - 1 WHERE id = ?",
+            (reservation["trajet_id"],),
+        )
+        db.commit()
+        flash("Demande acceptée. Les coordonnées du passager sont affichées.", "success")
+
+    db.close()
+    return redirect(url_for("demandes_recues"))
+
+
+@app.route("/refuser/<int:reservation_id>", methods=["POST"])
+@connexion_requise
+def refuser(reservation_id):
+    """Refus d'une demande par le conducteur (BF8)."""
+    db = get_db()
+    reservation = db.execute(
+        """SELECT r.id, r.statut
+           FROM reservations r
+           JOIN trajets t ON t.id = r.trajet_id
+           WHERE r.id = ? AND t.conducteur_id = ?""",
+        (reservation_id, session["user_id"]),
+    ).fetchone()
+
+    if reservation is None:
+        flash("Demande introuvable.", "danger")
+    elif reservation["statut"] != "en_attente":
+        flash("Cette demande a déjà été traitée.", "warning")
+    else:
+        db.execute("UPDATE reservations SET statut = 'refusee' WHERE id = ?", (reservation_id,))
+        db.commit()
+        flash("Demande refusée.", "info")
+
+    db.close()
+    return redirect(url_for("demandes_recues"))
 if __name__ == "__main__":
     app.run(debug=True)
