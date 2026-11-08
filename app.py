@@ -1,12 +1,10 @@
-from flask import Flask
+from flask import Flask, render_template
 
 app = Flask(__name__)
 
-
 @app.route("/")
 def accueil():
-	return "Bienvenue sur ISI Ride !"
-
+    return render_template("accueil.html")
 
 if __name__ == "__main__":
-	app.run(debug=True)
+    app.run(debug=True)
