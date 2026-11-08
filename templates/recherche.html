@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block titre %}Rechercher un trajet, ISI Ride{% endblock %}
+
+{% block contenu %}
+<h2 class="mb-3">Rechercher un trajet</h2>
+
+<form method="GET" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Ville</label>
+        <select name="ville" class="form-select" required>
+            <option value="">Choisir une ville</option>
+            {% for v in villes %}
+                <option value="{{ v }}" {% if v == ville %}selected{% endif %}>{{ v }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Sens</label>
+        <select name="sens" class="form-select" required>
+            <option value="aller" {% if sens == 'aller' %}selected{% endif %}>Aller : vers l'ISI</option>
+            <option value="retour" {% if sens == 'retour' %}selected{% endif %}>Retour : depuis l'ISI</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Date</label>
+        <input type="date" name="date" class="form-control" value="{{ date }}" required>
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Rechercher</button>
+    </div>
+</form>
+
+{% if trajets is not none %}
+    {% if trajets|length == 0 %}
+        <div class="alert alert-info">Aucun trajet disponible pour cette recherche.</div>
+    {% else %}
+        <p class="text-muted">{{ trajets|length }} trajet(s) trouvé(s), triés par heure de départ.</p>
+        <div class="row">
+            {% for t in trajets %}
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            {{ t['date_heure'][11:16] }} : {{ t['ville'] }}
+                            {% if t['sens'] == 'aller' %}→ ISI{% else %}← depuis l'ISI{% endif %}
+                        </h5>
+                        <p class="mb-1">📅 {{ t['date_heure'][:10] }}</p>
+                        <p class="mb-1">💰 {{ t['prix'] }} DT par personne</p>
+                        <p class="mb-1">💺 {{ t['places_restantes'] }} place(s) restante(s)</p>
+                        {% if t['point_rdv'] %}
+                            <p class="mb-1">📍 {{ t['point_rdv'] }}</p>
+                        {% endif %}
+                        <p class="mb-2">
+                            🚗 {{ t['prenom'] }} {{ t['nom'] }}
+                            {% if t['note_moyenne'] %}
+                                : ⭐ {{ '%.1f' % t['note_moyenne'] }}/5
+                            {% else %}
+                                : pas encore de note
+                            {% endif %}
+                        </p>
+                        <button class="btn btn-outline-secondary btn-sm" disabled>Demander une place (bientôt)</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endif %}
+{% endblock %}
