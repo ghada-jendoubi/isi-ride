@@ -19,14 +19,25 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('accueil') }}">Accueil</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Rechercher un trajet</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Connexion</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Inscription</a></li>
+                    {% if session.get('user_id') %}
+                        <li class="nav-item"><span class="nav-link text-white">Bonjour, {{ session['prenom'] }}</span></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('deconnexion') }}">Déconnexion</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('connexion') }}">Connexion</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('inscription') }}">Inscription</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
     <main class="container my-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for categorie, message in messages %}
+                <div class="alert alert-{{ categorie }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
         {% block contenu %}{% endblock %}
     </main>
 
