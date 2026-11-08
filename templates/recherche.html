@@ -59,7 +59,13 @@
                                 : pas encore de note
                             {% endif %}
                         </p>
-                        <button class="btn btn-outline-secondary btn-sm" disabled>Demander une place (bientôt)</button>
+                        {% if session.get('user_id') == t['conducteur_id'] %}
+                            <span class="badge bg-secondary">Votre trajet</span>
+                        {% else %}
+                            <form method="POST" action="{{ url_for('reserver', trajet_id=t['id']) }}">
+                                <button type="submit" class="btn btn-primary btn-sm">Demander une place</button>
+                            </form>
+                        {% endif %}
                     </div>
                 </div>
             </div>

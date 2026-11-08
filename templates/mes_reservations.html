@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block titre %}Mes réservations, ISI Ride{% endblock %}
+
+{% block contenu %}
+<h2 class="mb-3">Mes demandes de réservation</h2>
+
+{% if reservations|length == 0 %}
+    <div class="alert alert-info">
+        Vous n'avez envoyé aucune demande.
+        <a href="{{ url_for('rechercher') }}">Rechercher un trajet</a>
+    </div>
+{% else %}
+    <div class="row">
+        {% for r in reservations %}
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ r['date_heure'][11:16] }} : {{ r['ville'] }}
+                        {% if r['sens'] == 'aller' %}→ ISI{% else %}← depuis l'ISI{% endif %}
+                    </h5>
+                    <p class="mb-1">📅 {{ r['date_heure'][:10] }}</p>
+                    <p class="mb-1">💰 {{ r['prix'] }} DT</p>
+                    {% if r['point_rdv'] %}
+                        <p class="mb-1">📍 {{ r['point_rdv'] }}</p>
+                    {% endif %}
+                    <p class="mb-2">🚗 Conducteur : {{ r['prenom'] }} {{ r['nom'] }}</p>
+
+                    <p class="mb-2">
+                        {% if r['statut'] == 'en_attente' %}
+                            <span class="badge bg-warning text-dark">En attente</span>
+                        {% elif r['statut'] == 'acceptee' %}
+                            <span class="badge bg-success">Acceptée</span>
+                        {% elif r['statut'] == 'refusee' %}
+                            <span class="badge bg-danger">Refusée</span>
+                        {% elif r['statut'] == 'annulee' %}
+                            <span class="badge bg-secondary">Annulée</span>
+                        {% else %}
+                            <span class="badge bg-dark">Trajet annulé</span>
+                        {% endif %}
+                    </p>
+
+                    {% if r['statut'] == 'acceptee' %}
+                        <div class="alert alert-success py-2">
+                            <strong>Contact du conducteur</strong><br>
+                            E-mail : {{ r['email'] }}<br>
+                            {% if r['telephone'] %}Téléphone : {{ r['telephone'] }}{% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if r['statut'] in ('en_attente', 'acceptee') and r['date_heure'] > maintenant %}
+                    <form method="POST" action="{{ url_for('annuler_reservation', reservation_id=r['id']) }}"
+                          onsubmit="return confirm('Voulez-vous vraiment annuler cette réservation ?');">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Annuler ma demande</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

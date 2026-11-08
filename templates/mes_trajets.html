@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block titre %}Mes trajets, ISI Ride{% endblock %}
+
+{% block contenu %}
+<h2 class="mb-3">Mes trajets publiés</h2>
+
+{% if trajets|length == 0 %}
+    <div class="alert alert-info">
+        Vous n'avez publié aucun trajet.
+        <a href="{{ url_for('publier') }}">Publier un trajet</a>
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Date et heure</th>
+                    <th>Trajet</th>
+                    <th>Places</th>
+                    <th>Prix</th>
+                    <th>Statut</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in trajets %}
+                <tr>
+                    <td>{{ t['date_heure'] }}</td>
+                    <td>
+                        {{ t['ville'] }}
+                        {% if t['sens'] == 'aller' %}→ ISI{% else %}← depuis l'ISI{% endif %}
+                    </td>
+                    <td>{{ t['places_restantes'] }} / {{ t['places_total'] }}</td>
+                    <td>{{ t['prix'] }} DT</td>
+                    <td>
+                        {% if t['statut'] == 'annule' %}
+                            <span class="badge bg-danger">Annulé</span>
+                        {% elif t['date_heure'] <= maintenant %}
+                            <span class="badge bg-secondary">Passé</span>
+                        {% else %}
+                            <span class="badge bg-success">Actif</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if t['statut'] == 'actif' and t['date_heure'] > maintenant %}
+                        <form method="POST" action="{{ url_for('annuler_trajet', trajet_id=t['id']) }}"
+                              onsubmit="return confirm('Voulez-vous vraiment annuler ce trajet ?');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Annuler</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}
