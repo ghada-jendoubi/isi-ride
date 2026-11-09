@@ -55,6 +55,25 @@
                         <button type="submit" class="btn btn-outline-danger btn-sm">Annuler ma demande</button>
                     </form>
                     {% endif %}
+
+                    {% if r['statut'] == 'acceptee' and r['date_heure'] <= maintenant %}
+                        {% if r['note'] %}
+                            <p class="mb-0">Votre note : {{ '⭐' * r['note'] }} ({{ r['note'] }}/5)</p>
+                        {% else %}
+                            <form method="POST" action="{{ url_for('noter', reservation_id=r['id']) }}"
+                                  class="d-flex gap-2 align-items-center">
+                                <select name="note" class="form-select form-select-sm w-auto" required>
+                                    <option value="">Noter le conducteur</option>
+                                    <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                                    <option value="4">⭐⭐⭐⭐ (4)</option>
+                                    <option value="3">⭐⭐⭐ (3)</option>
+                                    <option value="2">⭐⭐ (2)</option>
+                                    <option value="1">⭐ (1)</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm">Envoyer</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
         </div>

@@ -317,10 +317,11 @@ def mes_reservations():
     db = get_db()
     reservations = db.execute(
         """SELECT r.id, r.statut, t.date_heure, t.ville, t.sens, t.prix, t.point_rdv,
-                  u.prenom, u.nom, u.email, u.telephone
+                  u.prenom, u.nom, u.email, u.telephone, a.note AS note
            FROM reservations r
            JOIN trajets t ON t.id = r.trajet_id
            JOIN utilisateurs u ON u.id = t.conducteur_id
+           LEFT JOIN avis a ON a.reservation_id = r.id
            WHERE r.passager_id = ?
            ORDER BY t.date_heure DESC""",
         (session["user_id"],),
@@ -363,6 +364,7 @@ def annuler_reservation(reservation_id):
 
     db.close()
     return redirect(url_for("mes_reservations"))
+
 
 @app.route("/demandes-recues")
 @connexion_requise
@@ -444,5 +446,51 @@ def refuser(reservation_id):
 
     db.close()
     return redirect(url_for("demandes_recues"))
+
+
+@app.route("/noter/<int:reservation_id>", methods=["POST"])
+@connexion_requise
+def noter(reservation_id):
+    """Note de 1 à 5 donnée par le passager au conducteur après le trajet (BF10, RG8)."""
+    maintenant = datetime.now().strftime("%Y-%m-%d %H:%M")
+    try:
+        note = int(request.form.get("note", ""))
+    except ValueError:
+        note = 0
+
+    db = get_db()
+    reservation = db.execute(
+        """SELECT r.id, r.statut, t.date_heure
+           FROM reservations r
+           JOIN trajets t ON t.id = r.trajet_id
+           WHERE r.id = ? AND r.passager_id = ?""",
+        (reservation_id, session["user_id"]),
+    ).fetchone()
+    deja_note = db.execute(
+        "SELECT id FROM avis WHERE reservation_id = ?", (reservation_id,)
+    ).fetchone()
+
+    if reservation is None:
+        flash("Réservation introuvable.", "danger")
+    elif reservation["statut"] != "acceptee":
+        flash("Vous ne pouvez noter que les trajets dont la réservation a été acceptée.", "danger")
+    elif reservation["date_heure"] > maintenant:
+        flash("Vous pourrez noter ce conducteur après le trajet.", "warning")
+    elif deja_note:
+        flash("Vous avez déjà noté ce trajet.", "warning")
+    elif note < 1 or note > 5:
+        flash("La note doit être comprise entre 1 et 5.", "danger")
+    else:
+        db.execute(
+            "INSERT INTO avis (reservation_id, note) VALUES (?, ?)",
+            (reservation_id, note),
+        )
+        db.commit()
+        flash("Merci, votre note a été enregistrée.", "success")
+
+    db.close()
+    return redirect(url_for("mes_reservations"))
+
+
 if __name__ == "__main__":
     app.run(debug=True)
