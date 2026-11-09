@@ -491,6 +491,87 @@ def noter(reservation_id):
     db.close()
     return redirect(url_for("mes_reservations"))
 
+def admin_requis(fonction):
+    """Réserve une page à l'administrateur (BF18)."""
+    @wraps(fonction)
+    def verifier(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Veuillez vous connecter pour accéder à cette page.", "warning")
+            return redirect(url_for("connexion"))
+        if session.get("role") != "admin":
+            flash("Accès réservé à l'administrateur.", "danger")
+            return redirect(url_for("accueil"))
+        return fonction(*args, **kwargs)
+    return verifier
 
+
+@app.route("/admin")
+@admin_requis
+def admin():
+    """Tableau de bord : liste des utilisateurs et des trajets (BF18, BF19)."""
+    db = get_db()
+    utilisateurs = db.execute(
+        "SELECT id, nom, prenom, email, ville, role, bloque FROM utilisateurs ORDER BY id"
+    ).fetchall()
+    trajets = db.execute(
+        """SELECT t.id, t.date_heure, t.ville, t.sens, t.places_restantes, t.places_total,
+                  t.prix, t.statut, u.prenom, u.nom
+           FROM trajets t
+           JOIN utilisateurs u ON u.id = t.conducteur_id
+           ORDER BY t.date_heure DESC"""
+    ).fetchall()
+    db.close()
+    return render_template("admin.html", utilisateurs=utilisateurs, trajets=trajets)
+
+
+@app.route("/admin/bloquer/<int:utilisateur_id>", methods=["POST"])
+@admin_requis
+def admin_bloquer(utilisateur_id):
+    """Blocage ou déblocage d'un compte étudiant (BF20)."""
+    db = get_db()
+    utilisateur = db.execute(
+        "SELECT id, role, bloque FROM utilisateurs WHERE id = ?", (utilisateur_id,)
+    ).fetchone()
+
+    if utilisateur is None:
+        flash("Utilisateur introuvable.", "danger")
+    elif utilisateur["role"] == "admin":
+        flash("Le compte administrateur ne peut pas être bloqué.", "danger")
+    elif utilisateur["bloque"] == 0:
+        db.execute("UPDATE utilisateurs SET bloque = 1 WHERE id = ?", (utilisateur_id,))
+        db.commit()
+        flash("Le compte a été bloqué.", "success")
+    else:
+        db.execute("UPDATE utilisateurs SET bloque = 0 WHERE id = ?", (utilisateur_id,))
+        db.commit()
+        flash("Le compte a été débloqué.", "success")
+
+    db.close()
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/supprimer-trajet/<int:trajet_id>", methods=["POST"])
+@admin_requis
+def admin_supprimer_trajet(trajet_id):
+    """Suppression définitive d'un trajet par l'administrateur (BF21)."""
+    db = get_db()
+    trajet = db.execute("SELECT id FROM trajets WHERE id = ?", (trajet_id,)).fetchone()
+
+    if trajet is None:
+        flash("Trajet introuvable.", "danger")
+    else:
+        # On supprime d'abord les avis, puis les réservations, puis le trajet
+        db.execute(
+            """DELETE FROM avis WHERE reservation_id IN
+               (SELECT id FROM reservations WHERE trajet_id = ?)""",
+            (trajet_id,),
+        )
+        db.execute("DELETE FROM reservations WHERE trajet_id = ?", (trajet_id,))
+        db.execute("DELETE FROM trajets WHERE id = ?", (trajet_id,))
+        db.commit()
+        flash("Le trajet a été supprimé définitivement.", "success")
+
+    db.close()
+    return redirect(url_for("admin"))
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block titre %}Administration, ISI Ride{% endblock %}
+
+{% block contenu %}
+<h2 class="mb-4">Espace administrateur</h2>
+
+<h4 class="mb-3">Utilisateurs ({{ utilisateurs|length }})</h4>
+<div class="table-responsive mb-5">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>E-mail</th>
+                <th>Ville</th>
+                <th>Rôle</th>
+                <th>Statut</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in utilisateurs %}
+            <tr>
+                <td>{{ u['prenom'] }} {{ u['nom'] }}</td>
+                <td>{{ u['email'] }}</td>
+                <td>{{ u['ville'] }}</td>
+                <td>{{ u['role'] }}</td>
+                <td>
+                    {% if u['bloque'] == 1 %}
+                        <span class="badge bg-danger">Bloqué</span>
+                    {% else %}
+                        <span class="badge bg-success">Actif</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if u['role'] != 'admin' %}
+                    <form method="POST" action="{{ url_for('admin_bloquer', utilisateur_id=u['id']) }}">
+                        {% if u['bloque'] == 1 %}
+                            <button type="submit" class="btn btn-outline-success btn-sm">Débloquer</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Bloquer</button>
+                        {% endif %}
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h4 class="mb-3">Trajets ({{ trajets|length }})</h4>
+{% if trajets|length == 0 %}
+    <div class="alert alert-info">Aucun trajet publié.</div>
+{% else %}
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Date et heure</th>
+                <th>Trajet</th>
+                <th>Conducteur</th>
+                <th>Places</th>
+                <th>Prix</th>
+                <th>Statut</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in trajets %}
+            <tr>
+                <td>{{ t['date_heure'] }}</td>
+                <td>
+                    {{ t['ville'] }}
+                    {% if t['sens'] == 'aller' %}→ ISI{% else %}← depuis l'ISI{% endif %}
+                </td>
+                <td>{{ t['prenom'] }} {{ t['nom'] }}</td>
+                <td>{{ t['places_restantes'] }} / {{ t['places_total'] }}</td>
+                <td>{{ t['prix'] }} DT</td>
+                <td>
+                    {% if t['statut'] == 'annule' %}
+                        <span class="badge bg-danger">Annulé</span>
+                    {% else %}
+                        <span class="badge bg-success">Actif</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin_supprimer_trajet', trajet_id=t['id']) }}"
+                          onsubmit="return confirm('Supprimer définitivement ce trajet et ses réservations ?');">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Supprimer</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
