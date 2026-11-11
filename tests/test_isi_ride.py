@@ -14,6 +14,8 @@ from app import app, DOMAINE_ISI
 
 EMAIL_CONDUCTEUR = "conducteur@" + DOMAINE_ISI
 EMAIL_PASSAGER = "passager@" + DOMAINE_ISI
+TEL_CONDUCTEUR = "22 123 456"
+TEL_PASSAGER = "98 765 432"
 
 
 # ---------------------------------------------------------------
@@ -46,10 +48,11 @@ def lire(requete, params=()):
     return resultat
 
 
-def inscrire(client, email, mot_de_passe="motdepasse1", ville="Tunis"):
+def inscrire(client, email, mot_de_passe="motdepasse1", ville="Tunis",
+             telephone=TEL_CONDUCTEUR):
     return client.post("/inscription", data={
         "nom": "Test", "prenom": "Etu", "email": email,
-        "mot_de_passe": mot_de_passe, "ville": ville, "telephone": "",
+        "mot_de_passe": mot_de_passe, "ville": ville, "telephone": telephone,
     }, follow_redirects=True)
 
 
@@ -73,11 +76,11 @@ def publier_trajet(client, places="3", prix="5", date_heure=None):
 
 def scenario_reservation(client):
     """Le conducteur publie un trajet, puis un passager envoie une demande."""
-    inscrire(client, EMAIL_CONDUCTEUR)
+    inscrire(client, EMAIL_CONDUCTEUR, telephone=TEL_CONDUCTEUR)
     connecter(client, EMAIL_CONDUCTEUR)
     publier_trajet(client)
     passager = app.test_client()
-    inscrire(passager, EMAIL_PASSAGER)
+    inscrire(passager, EMAIL_PASSAGER, telephone=TEL_PASSAGER)
     connecter(passager, EMAIL_PASSAGER)
     reponse = passager.post("/reserver/1", follow_redirects=True)
     return passager, reponse
@@ -115,6 +118,25 @@ def test_inscription_email_deja_utilise(client):
     inscrire(client, EMAIL_CONDUCTEUR)
     reponse = inscrire(client, EMAIL_CONDUCTEUR)
     assert "existe déjà" in texte(reponse)
+
+
+def test_inscription_telephone_obligatoire(client):
+    reponse = inscrire(client, EMAIL_CONDUCTEUR, telephone="")
+    assert "Tous les champs obligatoires" in texte(reponse)
+    assert lire("SELECT id FROM utilisateurs") == []
+
+
+def test_inscription_telephone_invalide(client):
+    reponse = inscrire(client, EMAIL_CONDUCTEUR, telephone="123")
+    assert "8 chiffres" in texte(reponse)
+    assert lire("SELECT id FROM utilisateurs") == []
+
+
+def test_inscription_telephone_avec_indicatif(client):
+    inscrire(client, EMAIL_CONDUCTEUR, telephone="+216 22123456")
+    stocke = lire("SELECT telephone FROM utilisateurs WHERE email = ?",
+                  (EMAIL_CONDUCTEUR,))[0][0]
+    assert stocke == "22 123 456"
 
 
 def test_connexion_valide(client):
@@ -219,13 +241,24 @@ def test_acceptation_diminue_les_places_et_annulation_les_libere(client):
     assert lire("SELECT places_restantes FROM trajets WHERE id = 1")[0][0] == 3
 
 
-def test_contact_visible_seulement_apres_acceptation(client):
+def test_telephone_conducteur_visible_seulement_apres_acceptation(client):
     passager, _ = scenario_reservation(client)
     avant = texte(passager.get("/mes-reservations"))
-    assert EMAIL_CONDUCTEUR not in avant
+    assert TEL_CONDUCTEUR not in avant
     client.post("/accepter/1")
     apres = texte(passager.get("/mes-reservations"))
-    assert EMAIL_CONDUCTEUR in apres
+    assert TEL_CONDUCTEUR in apres
+    # L'e-mail n'est plus affiché comme moyen de contact
+    assert EMAIL_CONDUCTEUR not in apres
+
+
+def test_conducteur_voit_telephone_passager_apres_acceptation(client):
+    scenario_reservation(client)
+    avant = texte(client.get("/demandes-recues"))
+    assert TEL_PASSAGER not in avant
+    client.post("/accepter/1")
+    apres = texte(client.get("/demandes-recues"))
+    assert TEL_PASSAGER in apres
 
 
 def test_annulation_trajet_met_a_jour_les_reservations(client):

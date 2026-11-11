@@ -17,9 +17,9 @@
                         {{ d['date_heure'][11:16] }} : {{ d['ville'] }}
                         {% if d['sens'] == 'aller' %}→ ISI{% else %}← depuis l'ISI{% endif %}
                     </h5>
-                    <p class="mb-1">📅 {{ d['date_heure'][:10] }}</p>
-                    <p class="mb-1">💺 {{ d['places_restantes'] }} place(s) restante(s)</p>
-                    <p class="mb-2">🧑 Passager : {{ d['prenom'] }} {{ d['nom'] }}</p>
+                    <p class="mb-1"><span class="text-muted">Date :</span> {{ d['date_heure'][:10] }}</p>
+                    <p class="mb-1"><span class="text-muted">Places restantes :</span> {{ d['places_restantes'] }}</p>
+                    <p class="mb-2"><span class="text-muted">Passager :</span> {{ d['prenom'] }} {{ d['nom'] }}</p>
 
                     <p class="mb-2">
                         {% if d['statut'] == 'en_attente' %}
@@ -37,9 +37,8 @@
 
                     {% if d['statut'] == 'acceptee' %}
                         <div class="alert alert-success py-2">
-                            <strong>Contact du passager</strong><br>
-                            E-mail : {{ d['email'] }}<br>
-                            {% if d['telephone'] %}Téléphone : {{ d['telephone'] }}{% endif %}
+                            <strong>Téléphone du passager</strong><br>
+                            {{ d['telephone'] or 'Numéro non renseigné' }}
                         </div>
                     {% endif %}
 

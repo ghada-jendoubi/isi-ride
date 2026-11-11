@@ -1,3 +1,4 @@
+import re
 import sqlite3
 from datetime import datetime
 from functools import wraps
@@ -26,6 +27,21 @@ def get_db():
     return connexion
 
 
+def normaliser_telephone(valeur):
+    """Vérifie un numéro tunisien et le met en forme « XX XXX XXX ».
+    Retourne None si le numéro est invalide (BNF14)."""
+    if not re.fullmatch(r"[0-9+\s.\-]+", valeur):
+        return None
+    chiffres = "".join(c for c in valeur if c.isdigit())
+    if chiffres.startswith("00216") and len(chiffres) == 13:
+        chiffres = chiffres[5:]
+    elif chiffres.startswith("216") and len(chiffres) == 11:
+        chiffres = chiffres[3:]
+    if len(chiffres) != 8:
+        return None
+    return chiffres[:2] + " " + chiffres[2:5] + " " + chiffres[5:]
+
+
 def connexion_requise(fonction):
     """Protège une page : il faut être connecté (BNF3)."""
     @wraps(fonction)
@@ -51,15 +67,18 @@ def inscription():
         mot_de_passe = request.form.get("mot_de_passe", "")
         ville = request.form.get("ville", "")
         telephone = request.form.get("telephone", "").strip()
+        telephone_valide = normaliser_telephone(telephone)
 
         # Vérifications (BF2, BNF2, BNF14)
         erreur = None
-        if not nom or not prenom or not email or not mot_de_passe or not ville:
+        if not nom or not prenom or not email or not mot_de_passe or not ville or not telephone:
             erreur = "Tous les champs obligatoires doivent être remplis."
         elif not email.endswith("@" + DOMAINE_ISI):
             erreur = "Seules les adresses e-mail de l'ISI (@" + DOMAINE_ISI + ") sont acceptées."
         elif len(mot_de_passe) < 8:
             erreur = "Le mot de passe doit contenir au moins 8 caractères."
+        elif telephone_valide is None:
+            erreur = "Le numéro de téléphone doit contenir 8 chiffres (exemple : 22 123 456)."
         elif ville not in VILLES:
             erreur = "Veuillez choisir une ville dans la liste."
 
@@ -76,7 +95,7 @@ def inscription():
                        (nom, prenom, email, mot_de_passe, ville, telephone)
                        VALUES (?, ?, ?, ?, ?, ?)""",
                     (nom, prenom, email, generate_password_hash(mot_de_passe),
-                     ville, telephone or None),
+                     ville, telephone_valide),
                 )
                 connexion.commit()
                 connexion.close()
@@ -416,7 +435,7 @@ def accepter(reservation_id):
             (reservation["trajet_id"],),
         )
         db.commit()
-        flash("Demande acceptée. Les coordonnées du passager sont affichées.", "success")
+        flash("Demande acceptée. Le numéro de téléphone du passager est affiché.", "success")
 
     db.close()
     return redirect(url_for("demandes_recues"))
@@ -490,6 +509,7 @@ def noter(reservation_id):
 
     db.close()
     return redirect(url_for("mes_reservations"))
+
 
 def admin_requis(fonction):
     """Réserve une page à l'administrateur (BF18)."""
@@ -573,5 +593,7 @@ def admin_supprimer_trajet(trajet_id):
 
     db.close()
     return redirect(url_for("admin"))
+
+
 if __name__ == "__main__":
     app.run(debug=True)

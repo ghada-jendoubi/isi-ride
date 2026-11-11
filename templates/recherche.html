@@ -45,18 +45,18 @@
                             {{ t['date_heure'][11:16] }} : {{ t['ville'] }}
                             {% if t['sens'] == 'aller' %}→ ISI{% else %}← depuis l'ISI{% endif %}
                         </h5>
-                        <p class="mb-1">📅 {{ t['date_heure'][:10] }}</p>
-                        <p class="mb-1">💰 {{ t['prix'] }} DT par personne</p>
-                        <p class="mb-1">💺 {{ t['places_restantes'] }} place(s) restante(s)</p>
+                        <p class="mb-1"><span class="text-muted">Date :</span> {{ t['date_heure'][:10] }}</p>
+                        <p class="mb-1"><span class="text-muted">Prix :</span> {{ t['prix'] }} DT par personne</p>
+                        <p class="mb-1"><span class="text-muted">Places restantes :</span> {{ t['places_restantes'] }}</p>
                         {% if t['point_rdv'] %}
-                            <p class="mb-1">📍 {{ t['point_rdv'] }}</p>
+                            <p class="mb-1"><span class="text-muted">Rendez-vous :</span> {{ t['point_rdv'] }}</p>
                         {% endif %}
-                        <p class="mb-2">
-                            🚗 {{ t['prenom'] }} {{ t['nom'] }}
+                        <p class="mb-3">
+                            <span class="text-muted">Conducteur :</span> {{ t['prenom'] }} {{ t['nom'] }}
                             {% if t['note_moyenne'] %}
-                                : ⭐ {{ '%.1f' % t['note_moyenne'] }}/5
+                                (note moyenne : {{ '%.1f' % t['note_moyenne'] }}/5)
                             {% else %}
-                                : pas encore de note
+                                (pas encore de note)
                             {% endif %}
                         </p>
                         {% if session.get('user_id') == t['conducteur_id'] %}

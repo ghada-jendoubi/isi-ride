@@ -20,12 +20,12 @@
                         {{ r['date_heure'][11:16] }} : {{ r['ville'] }}
                         {% if r['sens'] == 'aller' %}→ ISI{% else %}← depuis l'ISI{% endif %}
                     </h5>
-                    <p class="mb-1">📅 {{ r['date_heure'][:10] }}</p>
-                    <p class="mb-1">💰 {{ r['prix'] }} DT</p>
+                    <p class="mb-1"><span class="text-muted">Date :</span> {{ r['date_heure'][:10] }}</p>
+                    <p class="mb-1"><span class="text-muted">Prix :</span> {{ r['prix'] }} DT</p>
                     {% if r['point_rdv'] %}
-                        <p class="mb-1">📍 {{ r['point_rdv'] }}</p>
+                        <p class="mb-1"><span class="text-muted">Rendez-vous :</span> {{ r['point_rdv'] }}</p>
                     {% endif %}
-                    <p class="mb-2">🚗 Conducteur : {{ r['prenom'] }} {{ r['nom'] }}</p>
+                    <p class="mb-2"><span class="text-muted">Conducteur :</span> {{ r['prenom'] }} {{ r['nom'] }}</p>
 
                     <p class="mb-2">
                         {% if r['statut'] == 'en_attente' %}
@@ -43,9 +43,8 @@
 
                     {% if r['statut'] == 'acceptee' %}
                         <div class="alert alert-success py-2">
-                            <strong>Contact du conducteur</strong><br>
-                            E-mail : {{ r['email'] }}<br>
-                            {% if r['telephone'] %}Téléphone : {{ r['telephone'] }}{% endif %}
+                            <strong>Téléphone du conducteur</strong><br>
+                            {{ r['telephone'] or 'Numéro non renseigné' }}
                         </div>
                     {% endif %}
 
@@ -58,17 +57,17 @@
 
                     {% if r['statut'] == 'acceptee' and r['date_heure'] <= maintenant %}
                         {% if r['note'] %}
-                            <p class="mb-0">Votre note : {{ '⭐' * r['note'] }} ({{ r['note'] }}/5)</p>
+                            <p class="mb-0">Votre note : {{ r['note'] }}/5</p>
                         {% else %}
                             <form method="POST" action="{{ url_for('noter', reservation_id=r['id']) }}"
                                   class="d-flex gap-2 align-items-center">
                                 <select name="note" class="form-select form-select-sm w-auto" required>
                                     <option value="">Noter le conducteur</option>
-                                    <option value="5">⭐⭐⭐⭐⭐ (5)</option>
-                                    <option value="4">⭐⭐⭐⭐ (4)</option>
-                                    <option value="3">⭐⭐⭐ (3)</option>
-                                    <option value="2">⭐⭐ (2)</option>
-                                    <option value="1">⭐ (1)</option>
+                                    <option value="5">5 : Excellent</option>
+                                    <option value="4">4 : Très bien</option>
+                                    <option value="3">3 : Correct</option>
+                                    <option value="2">2 : Décevant</option>
+                                    <option value="1">1 : Mauvais</option>
                                 </select>
                                 <button type="submit" class="btn btn-primary btn-sm">Envoyer</button>
                             </form>
