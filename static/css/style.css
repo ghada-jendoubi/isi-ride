@@ -1,3 +1,151 @@
+:root {
+    /* Palette du projet */
+    --mauve: #8e6fc9;
+    --mauve-bouton: #7c5cbf;
+    --mauve-fonce: #3b2a63;
+    --mauve-pastel: #ece6f8;
+    --mauve-tres-clair: #f7f4fc;
+    --texte: #2d2a3a;
+
+    /* On remplace la couleur "primary" de Bootstrap par le mauve */
+    --bs-primary: #8e6fc9;
+    --bs-primary-rgb: 142, 111, 201;
+    --bs-link-color: #6f4fb0;
+    --bs-link-color-rgb: 111, 79, 176;
+    --bs-link-hover-color: #563c8f;
+    --bs-link-hover-color-rgb: 86, 60, 143;
+    --bs-body-color: #2d2a3a;
+    --bs-body-bg: #ffffff;
+    --bs-body-font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
 body {
-    background-color: #f8f9fa;
+    background-color: #ffffff;
+    color: var(--texte);
+}
+
+/* ---------- Barre de navigation ---------- */
+.barre-navigation {
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--mauve-pastel);
+    box-shadow: 0 2px 8px rgba(142, 111, 201, 0.08);
+}
+
+.barre-navigation .nav-link {
+    color: #4a4560;
+    font-weight: 500;
+}
+
+.barre-navigation .nav-link:hover,
+.barre-navigation .nav-link:focus {
+    color: var(--mauve);
+}
+
+.barre-navigation .salutation {
+    color: var(--mauve-fonce);
+    font-weight: 600;
+}
+
+/* ---------- Logo en texte ---------- */
+.logo {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    letter-spacing: 0.5px;
+    color: var(--mauve-fonce);
+}
+
+.logo span {
+    color: var(--mauve);
+    margin-left: 4px;
+}
+
+.logo:hover {
+    color: var(--mauve-fonce);
+}
+
+/* ---------- Titres ---------- */
+h1, h2, h3, h4 {
+    color: var(--mauve-fonce);
+    font-weight: 600;
+}
+
+/* ---------- Boutons ---------- */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.btn-primary {
+    --bs-btn-color: #ffffff;
+    --bs-btn-bg: var(--mauve-bouton);
+    --bs-btn-border-color: var(--mauve-bouton);
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-hover-bg: #6a4aad;
+    --bs-btn-hover-border-color: #6a4aad;
+    --bs-btn-active-color: #ffffff;
+    --bs-btn-active-bg: #5d3f9c;
+    --bs-btn-active-border-color: #5d3f9c;
+    --bs-btn-disabled-bg: #b9a4e3;
+    --bs-btn-disabled-border-color: #b9a4e3;
+    --bs-btn-focus-shadow-rgb: 142, 111, 201;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: #6f4fb0;
+    --bs-btn-border-color: var(--mauve);
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-hover-bg: var(--mauve-bouton);
+    --bs-btn-hover-border-color: var(--mauve-bouton);
+    --bs-btn-active-color: #ffffff;
+    --bs-btn-active-bg: #6a4aad;
+    --bs-btn-active-border-color: #6a4aad;
+    --bs-btn-focus-shadow-rgb: 142, 111, 201;
+}
+
+/* ---------- Formulaires ---------- */
+.form-control,
+.form-select {
+    border-radius: 8px;
+    border-color: #d9cfee;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #b9a4e3;
+    box-shadow: 0 0 0 0.25rem rgba(142, 111, 201, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--mauve-bouton);
+    border-color: var(--mauve-bouton);
+}
+
+/* ---------- Cartes et tableaux ---------- */
+.card {
+    border: 1px solid var(--mauve-pastel);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(142, 111, 201, 0.07);
+}
+
+.card-header {
+    background-color: var(--mauve-tres-clair);
+    border-bottom: 1px solid var(--mauve-pastel);
+}
+
+.table > thead {
+    background-color: var(--mauve-pastel);
+}
+
+.table > thead th {
+    color: var(--mauve-fonce);
+    font-weight: 600;
+}
+
+/* ---------- Pied de page ---------- */
+.pied-de-page {
+    background-color: var(--mauve-tres-clair);
+    border-top: 1px solid var(--mauve-pastel);
+    color: #6b6580;
+    font-size: 0.9rem;
 }
