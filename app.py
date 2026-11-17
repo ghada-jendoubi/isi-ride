@@ -1,3 +1,4 @@
+import os
 import re
 import sqlite3
 from datetime import datetime
@@ -6,7 +7,9 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "isi-ride-cle-secrete-projet-l2-2026-x9k2m7q4"
+# La clé secrète est lue sur le serveur (variable d'environnement).
+# Sur ton PC, la valeur par défaut est utilisée.
+app.secret_key = os.environ.get("ISI_RIDE_SECRET", "cle-de-developpement-locale")
 
 # Domaine e-mail autorisé : étudiants de l'ISI
 DOMAINE_ISI = "etudiant-isi.utm.tn"
@@ -596,4 +599,5 @@ def admin_supprimer_trajet(trajet_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # debug=False : en production, le mode debug exposerait les détails des erreurs
+    app.run(debug=False)
